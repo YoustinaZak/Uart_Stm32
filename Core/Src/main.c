@@ -45,9 +45,9 @@ DMA_HandleTypeDef hdma_usart1_rx;
 
 /* USER CODE BEGIN PV */
 uint8_t arr[30]= "mc: What is your name? \n\r";
-volatile uint8_t hello[10]="mc: Hello ";
-volatile uint8_t name[10]="x";
-volatile uint8_t write[1];
+volatile uint8_t hello[]="mc: Hello ";
+volatile uint8_t name[100]={0};
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -62,6 +62,7 @@ static void MX_USART1_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 void OnDataReceive(UART_HandleTypeDef *huart);
+void RxEvent(UART_HandleTypeDef *huart , uint16_t length);
 /* USER CODE END 0 */
 
 /**
@@ -95,15 +96,16 @@ int main(void)
   MX_DMA_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_RegisterCallback(&huart1, HAL_UART_RX_COMPLETE_CB_ID, OnDataReceive);
 
-  //HAL_UART_Transmit(&huart1, arr, strlen((char*)arr), 100);
+  huart1.RxEventCallback = RxEvent;
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   HAL_UART_Transmit(&huart1, arr, 30, 100);
-  HAL_UART_Receive_IT(&huart1, write, 1); //will receive a letter, generate isr
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart1,name, 100); //will receive a letter, generate isr
 
   while (1)
   {
@@ -226,7 +228,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void OnDataReceive(UART_HandleTypeDef *huart)
+/*void OnDataReceive(UART_HandleTypeDef *huart)
 {
 	static uint8_t i=0;
 
@@ -246,11 +248,16 @@ void OnDataReceive(UART_HandleTypeDef *huart)
 		HAL_UART_Transmit(huart, name, 10, 100);
 	}
 	i++;
-	/*HAL_UART_Transmit_IT(huart, arr, 1);
-	while()
-	{
-		HAL_UART_Receive_IT(huart, arr, 1);
-	}*/
+
+}
+*/
+
+void RxEvent(UART_HandleTypeDef *huart , uint16_t length)
+{
+
+    HAL_UART_Transmit(huart, hello, strlen(hello), 100);
+    HAL_UART_Transmit(huart, name, length, 100 );
+
 }
 /* USER CODE END 4 */
 
